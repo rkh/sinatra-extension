@@ -26,7 +26,8 @@ Example
         "bar"
       end
       
-      enabled :fancy_mode do
+      # there also is on_set and on_disable
+      on_enable :fancy_mode do
         use VeryFancyMiddleware
         get '/fancy' do
           "fancy!"

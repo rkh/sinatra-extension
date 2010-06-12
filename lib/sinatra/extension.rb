@@ -53,11 +53,11 @@ module Sinatra
       end
     end
 
-    def disabled(option, &block)
+    def on_disable(option, &block)
       on_set(option, true) { instance_yield block unless __send__ option }
     end
 
-    def enabled(option, &block)
+    def on_enable(option, &block)
       on_set(option, false) { instance_yield block if __send__ option }
     end
 
