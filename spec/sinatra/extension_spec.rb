@@ -21,6 +21,9 @@ module Sinatra
       def foo(value) value end
     end
 
+    set :counter, 0
+    on_set(:trigger) { set :counter, counter + 1 }
+
     enabled :special_foo do
       helpers do
         def foo(value) 42 end
@@ -57,9 +60,22 @@ describe Sinatra::Extension do
     app.new.foo(10).should == 10
   end
 
+  it "should trigger on_set block" do
+    app.set :counter, 0
+    app.counter.should == 0
+    app.enable :trigger
+    app.counter.should == 1
+    app.disable :trigger
+    app.counter.should == 2
+    app.set :trigger, :foo
+    app.counter.should == 3
+    app.trigger = 42
+    app.counter.should == 4
+  end
+
   it "should apply enabled blocks only if given option has been enabled" do
     app.should_not be_special_foo
-    app.special_foo.should be_nil
+    app.special_foo.should be_false
     app.new.foo(10).should == 10
     app.enable :special_foo
     app.should be_special_foo

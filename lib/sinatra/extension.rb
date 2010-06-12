@@ -41,17 +41,24 @@ module Sinatra
       register_hooks << block
     end
 
-    def enabled(option, &block)
+    def on_set(option, default_value = nil, &block)
       mod = Module.new
       mod.extend Sinatra::Extension
-      define_method(option) { nil }
-      define_method("#{option}?") { false }
+      define_method(option) { default_value }
+      define_method("#{option}?") { !!__send__(option) }
       define_method("#{option}=") do |value|
         metadef(option) { value }
-        return value unless value
-        metadef("#{option}?") { true }
+        metadef("#{option}?") { !!value }
         instance_yield block
       end
+    end
+
+    def disabled(option, &block)
+      on_set(option, true) { instance_yield block unless __send__ option }
+    end
+
+    def enabled(option, &block)
+      on_set(option, false) { instance_yield block if __send__ option }
     end
 
     def register(*extensions)
