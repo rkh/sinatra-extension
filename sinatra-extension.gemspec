@@ -2,13 +2,11 @@ SPEC = Gem::Specification.new do |s|
 
   # Get the facts.
   s.name             = "sinatra-extension"
-  s.version          = "0.5.0"
-  s.description      = "Mixin to ease Sinatra extension development (part of BigBand)."
+  s.version          = "0.6.0"
+  s.description      = "Mixin to ease Sinatra extension development."
 
   # BigBand depedencies
-  s.add_dependency "monkey-lib", "~> 0.5.0"
-  s.add_dependency "sinatra-sugar", "~> 0.5.0"
-  s.add_development_dependency "sinatra-test-helper", "~> 0.5.0"
+  s.add_development_dependency "sinatra-test-helper", "~> 0.6.0"
 
   # External dependencies
   s.add_dependency "sinatra", "~> 1.0"

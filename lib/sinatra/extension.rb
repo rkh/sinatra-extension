@@ -1,6 +1,4 @@
 require 'sinatra/base'
-require 'sinatra/sugar'
-require 'monkey-lib'
 
 module Sinatra
   module Delegator
@@ -49,16 +47,16 @@ module Sinatra
       define_method("#{option}=") do |value|
         metadef(option) { value }
         metadef("#{option}?") { !!value }
-        instance_yield block
+        instance_yield(&block)
       end
     end
 
     def on_disable(option, &block)
-      on_set(option, true) { instance_yield block unless __send__ option }
+      on_set(option, true) { instance_yield(&block) unless __send__ option }
     end
 
     def on_enable(option, &block)
-      on_set(option, false) { instance_yield block if __send__ option }
+      on_set(option, false) { instance_yield(&block) if __send__ option }
     end
 
     def register(*extensions)
@@ -67,18 +65,50 @@ module Sinatra
 
     def configure(*args, &block)
       on_register do
-        configure(*args) { |klass| klass.instance_yield block }
+        configure(*args) { |klass| klass.instance_yield(&block) }
       end
     end
 
     def registered(klass)
-      register Sinatra::Sugar
       method_calls.each { |a,b| klass.__send__(*a, &b) }
-      register_hooks.each { |hook| klass.instance_yield hook }
+      register_hooks.each { |hook| klass.instance_yield(&hook) }
     end
 
     def sinatra_application
       @sinatra_application ||= MethodRecorder.new method_calls
+    end
+  end
+
+  module CoreExt
+    module Object
+      ::Object.send(:include, self)
+      # Leaves the decission to use instance_exec for internal DSLs up the
+      # end user by using instance_exec if the given block takes more
+      # arguments than passed to instance_yield, yield(self, *args) otherwise.
+      #
+      # @example
+      #   def my_dsl(&block)
+      #     dsl_object.instance_yield(42, &block)
+      #   end
+      #   
+      #   my_dsl do |number|
+      #     do_something :with => "a string"
+      #     self # => dsl_object
+      #     number # => 42
+      #   end
+      #   
+      #   my_dsl do |object, number|
+      #     object.do_something :with => "a string"
+      #     self # => main
+      #     number # => 42
+      #   end
+      def instance_yield(*args, &block)
+        if block.arity > args.size or (-1 - block.arity) > args.size
+          yield(self, *args)
+        else
+          instance_exec(*args, &block)
+        end
+      end
     end
   end
 end
